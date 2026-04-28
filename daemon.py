@@ -70,6 +70,7 @@ class CallBusDaemon:
                 raise RuntimeError(f"Cannot remove socket: {self.socket_path}")
 
         server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.server = server
         server.bind(self.socket_path)
         os.chmod(self.socket_path, 0o600)
         server.listen()
@@ -77,10 +78,15 @@ class CallBusDaemon:
         print(f"[callbus] listening on {self.socket_path}")
         try:
             while self.running:
-                conn, _ = server.accept()
+                try:
+                    conn, _ = server.accept()
+                except OSError:
+                    break
                 with conn:
-                    msg = self._read_msg(conn)
-                    if msg is not None:
+                    while True:
+                        msg = self._read_msg(conn)
+                        if msg is None:
+                            break
                         response = self._handle(msg)
                         self._send_msg(conn, response)
         finally:

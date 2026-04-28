@@ -2,11 +2,10 @@ import socket
 import struct
 from callbus import protocol
 
-SOCKET_PATH = "/tmp/callbus.sock"
 
 
 class CallBusClient:
-    def __init__(self, socket_path=SOCKET_PATH):
+    def __init__(self, socket_path):
         self.socket_path = socket_path
 
     def call(self, method, *args, **kwargs):

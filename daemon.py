@@ -11,6 +11,7 @@ class CallBusDaemon:
         self.socket_path = socket_path
         self.running = True
         self.handlers = {}
+        self.lock = threading.Lock()
 
     def register(self, name: str, fn):
         self.handlers[name] = fn
@@ -61,6 +62,18 @@ class CallBusDaemon:
         except Exception as e:
             return protocol.make_response(error=str(e))
 
+
+    def _client_handler(self, conn):
+        with conn:
+            while True:
+                msg = self._read_msg(conn)
+                    if msg is None:
+                        break
+                    with self.lock:
+                        response = self._handle(msg)
+                    self._send_msg(conn, response)
+
+
     def serve(self):
         install_signal_handlers(self)
         if os.path.exists(self.socket_path):
@@ -82,13 +95,8 @@ class CallBusDaemon:
                     conn, _ = server.accept()
                 except OSError:
                     break
-                with conn:
-                    while True:
-                        msg = self._read_msg(conn)
-                        if msg is None:
-                            break
-                        response = self._handle(msg)
-                        self._send_msg(conn, response)
+                t = threading.Thread(target=self._client_handler, args=(conn,), daemon=True)
+                t.start()
         finally:
             server.close()
             if os.path.exists(self.socket_path):

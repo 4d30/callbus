@@ -67,11 +67,11 @@ class CallBusDaemon:
         with conn:
             while True:
                 msg = self._read_msg(conn)
-                    if msg is None:
-                        break
-                    with self.lock:
-                        response = self._handle(msg)
-                    self._send_msg(conn, response)
+                if msg is None:
+                    break
+                with self.lock:
+                    response = self._handle(msg)
+                self._send_msg(conn, response)
 
 
     def serve(self):

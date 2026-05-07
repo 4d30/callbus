@@ -4,7 +4,7 @@ import socket
 import struct
 import signal
 import threading
-from callbus import protocol
+from . import protocol
 
 
 class CallBusDaemon:

@@ -1,6 +1,6 @@
 import socket
 import struct
-from callbus import protocol
+from . import protocol
 
 
 class CallBusClient:
